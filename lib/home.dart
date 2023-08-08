@@ -1,9 +1,12 @@
+import 'dart:math';
+
 import 'package:calculator/components/button.dart';
 import 'package:calculator/components/buttonsection.dart';
 import 'package:calculator/components/input.dart';
 import 'package:flutter/material.dart';
-
+import 'package:function_tree/function_tree.dart';
 import 'components/buttonrow.dart';
+import 'package:math_expressions/math_expressions.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key, required this.title});
@@ -17,6 +20,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   TextEditingController controller = TextEditingController();
   String _screenValue = "";
+  Parser p = Parser();
 
   @override
   void initState() {
@@ -76,15 +80,41 @@ class _HomeState extends State<Home> {
   void handlePercent() {
     if (_screenValue.isNotEmpty && double.tryParse(_screenValue) is num) {
       setState(() {
-        _screenValue += '%';
+        _screenValue = "$_screenValue / 100".interpret().toString();
         controller.value = TextEditingValue(text: _screenValue);
       });
     }
   }
 
+  void handleSign() {}
 
-  void handleSign() {
-    
+  void handleEvaluation() {
+    if (_screenValue.isNotEmpty) {
+      String result = _screenValue.interpret().toString();
+      setState(() {
+        _screenValue = result;
+        controller.value = TextEditingValue(text: _screenValue);
+      });
+    }
+  }
+
+  void handleInversion() {
+    if (_screenValue.isNotEmpty && double.tryParse(_screenValue) is num) {
+      num result = double.tryParse(_screenValue)!;
+      String resultToString;
+      if (result.isNegative) {
+        result = result.abs();
+        resultToString = result.toString();
+      } else {
+        resultToString = result.toString();
+        resultToString = "-$resultToString";
+      }
+
+      setState(() {
+        _screenValue = resultToString;
+        controller.value = TextEditingValue(text: _screenValue);
+      });
+    }
   }
 
   @override
@@ -146,9 +176,11 @@ class _HomeState extends State<Home> {
             },
           ),
           CalculatorButton(
-            title: "/",
-            textColor: Colors.green,
-          ),
+              title: "/",
+              textColor: Colors.green,
+              onPressed: () {
+                handleInput("/");
+              }),
         ]),
         const SizedBox(height: 9),
         ButtonRow(children: [
@@ -172,7 +204,7 @@ class _HomeState extends State<Home> {
               title: "x",
               textColor: Colors.green,
               onPressed: () {
-                handleInput("x");
+                handleInput("*");
               }),
         ]),
         const SizedBox(height: 9),
@@ -227,6 +259,7 @@ class _HomeState extends State<Home> {
         ButtonRow(children: [
           CalculatorButton(
             title: "+/-",
+            onPressed: handleInversion,
           ),
           CalculatorButton(
               title: "0",
@@ -242,6 +275,9 @@ class _HomeState extends State<Home> {
             title: "=",
             buttonColor: Colors.green,
             textSize: 30,
+            onPressed: () {
+              handleEvaluation();
+            },
           ),
         ]),
       ]))
